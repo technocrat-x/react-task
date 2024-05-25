@@ -22,4 +22,16 @@
 
 /** TODO: Create separate styles for .primary and .secondary variants of this button:
 * - Must use the CSS variables declared in App.css
+Completed^
 */
+.primary {
+  /* Styles for primary variant */
+  background-color: blue;
+  color: white;
+}
+
+.secondary {
+  /* Styles for secondary variant */
+  background-color: darkgray;
+  color: white;
+}
