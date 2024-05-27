@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { useDispatch, useStore } from "react-redux";
 
 import transformAddress from "../../core/models/address";
@@ -7,9 +7,9 @@ import databaseService from "../../core/services/databaseService";
 export default function useAddressBook() {
   const dispatch = useDispatch();
   const store = useStore();
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const updateDatabase = React.useCallback(() => {
+  const updateDatabase = useCallback(() => {
     const state = store.getState();
     databaseService.setItem("addresses", state.addressBook.addresses);
   }, [store]);
@@ -28,7 +28,6 @@ export default function useAddressBook() {
     /** Loads saved addresses from the indexedDB */
     loadSavedAddresses: async () => {
       const saved = await databaseService.getItem("addresses");
-      // No saved item found, exit this function
       if (!saved || !Array.isArray(saved)) {
         setLoading(false);
         return;
