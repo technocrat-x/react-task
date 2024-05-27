@@ -130,8 +130,7 @@ function App() {
     setSearchResults([]);
     setAddresses([]);
     setSelectedAddress("");
-  };
-  const handlePersonSubmit = (e) => {
+  };  const handlePersonSubmit = (e) => {
     e.preventDefault();
     const firstName = getFormData("firstName");
     const lastName = getFormData("lastName");
