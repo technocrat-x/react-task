@@ -10,6 +10,7 @@ import $ from "./AddressBook.module.css";
 
 const AddressBook = () => {
   const addresses = useSelector((state) => state.addressBook.addresses);
+  console.log(addresses)
   const { removeAddress, loadSavedAddresses, loading } = useAddressBook();
 
   React.useEffect(() => {

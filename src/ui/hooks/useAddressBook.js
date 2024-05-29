@@ -17,6 +17,7 @@ export default function useAddressBook() {
   return {
     /** Add address to the redux store */
     addAddress: (address) => {
+      console.log('book',address)
       dispatch({ type: "address/add", payload: address });
       updateDatabase();
     },
