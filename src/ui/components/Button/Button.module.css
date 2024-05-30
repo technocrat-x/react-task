@@ -10,6 +10,8 @@
   margin: 0.5em 0;
   transition: transform 0.1s ease;
   width: 100%;
+  border: var(--color-brand);
+
 }
 
 .button:hover {
@@ -18,6 +20,20 @@
 
 .button:active {
   transform: scale(0.95);
+}
+.clear{
+  background: var(--color-background);
+  color: var(--color-brand);
+outline: 2px solid;
+}
+
+.primary{
+  background-color: var(--color-brand);
+  color: white;
+}
+.secondary{
+  background-color: var(--color-brand);
+
 }
 
 /** TODO: Create separate styles for .primary and .secondary variants of this button:

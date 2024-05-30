@@ -8,12 +8,13 @@
 */
 
 :root {
+  --font-primary: 'Roboto', sans-serif;
   --border-radius-default: 4px;
   --border-radius-xl: 15px;
   --color-accent: #cacfdd;
   --color-background: #fff;
   --color-border: #bbb;
-  --color-brand: #413ef7;
+  --color-brand: #0d53ad;
   --color-text: #141925;
   --color-text-light: #72787d;
   --width-input: 20rem;
@@ -28,6 +29,7 @@ body {
   accent-color: var(--color-brand);
   font-size: 18px;
   font-family: var(--font-primary);
+
   background: var(--color-accent);
 }
 
