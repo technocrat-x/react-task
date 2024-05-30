@@ -1,15 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 
 import Address from "./ui/components/Address/Address";
 import AddressBook from "./ui/components/AddressBook/AddressBook";
-import Button from "./ui/components/Button/Button";
-import InputText from "./ui/components/InputText/InputText";
 import Radio from "./ui/components/Radio/Radio";
 import Section from "./ui/components/Section/Section";
-import transformAddress from "./core/models/address";
 import useAddressBook from "./ui/hooks/useAddressBook";
 
 import "./App.css";
+import useFormFields from "./ui/hooks/useFormFields";
+import transformAddress from "./core/models/address";
+import Form from "./ui/components/Form/Form";
+import ErrorMessage from "./ui/components/Error/ErrorMessage";
+import Button from "./ui/components/Button/Button";
 
 function App() {
   /**
@@ -20,39 +22,86 @@ function App() {
    * - Remove all individual React.useState
    * - Remove all individual onChange handlers, like handleZipCodeChange for example
    */
-  const [zipCode, setZipCode] = React.useState("");
-  const [houseNumber, setHouseNumber] = React.useState("");
-  const [firstName, setFirstName] = React.useState("");
-  const [lastName, setLastName] = React.useState("");
-  const [selectedAddress, setSelectedAddress] = React.useState("");
+
   /**
    * Results states
    */
-  const [error, setError] = React.useState(undefined);
-  const [addresses, setAddresses] = React.useState([]);
+  const [formFields, handleChange, setFields] = useFormFields({
+    zipCode: "",
+    houseNumber: "",
+    firstName: "",
+    lastName: "",
+    selectedAddress: "",
+  });
+  const [error, setError] = useState(undefined);
+  const [addresses, setAddresses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const { addAddress } = useAddressBook();
   /**
    * Redux actions
    */
-  const { addAddress } = useAddressBook();
+  // const { addAddress } = useAddressBook();
 
   /**
    * Text fields onChange handlers
    */
-  const handleZipCodeChange = (e) => setZipCode(e.target.value);
-
-  const handleHouseNumberChange = (e) => setHouseNumber(e.target.value);
-
-  const handleFirstNameChange = (e) => setFirstName(e.target.value);
-
-  const handleLastNameChange = (e) => setLastName(e.target.value);
-
-  const handleSelectedAddressChange = (e) => setSelectedAddress(e.target.value);
 
   const handleAddressSubmit = async (e) => {
-    e.preventDefault();
+   
+    const { zipCode, houseNumber } = formFields;
+    setLoading(true);
+    setError(null);
 
+    const apiUrl = `http://api.postcodedata.nl/v1/postcode/?postcode=${zipCode}&streetnumber=${houseNumber}&ref=domeinnaam.nl&type=json`;
+    try {
+      const responce = await fetch(apiUrl);
+      if (!responce.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await responce.json();
+      if (data.status === "error") {
+        const mockData = [
+          {
+            id: 1,
+            street: "Oak Street",
+            city: "Maplewood",
+            municipality: "Essex County",
+            province: "New Jersey",
+            houseNumber: "123",
+            postcode: "07040",
+          },
+          {
+            id: 2,
+            street: "Pine Avenue",
+            city: "Springfield",
+            municipality: "Sangamon County",
+            province: "Illinois",
+            houseNumber: "456",
+            postcode: "62701",
+          },
+        
+        ];
+
+
+        setAddresses(mockData)
+        throw new Error(data.errormessage);
+
+
+
+      }
+      const transformedAddresses = data.map((addressData) => {
+        const transformedAddress = transformAddress(addressData);
+        transformedAddress.houseNumber = houseNumber; // Adding houseNumber to each address
+        return transformedAddress;
+      });
+      setAddresses(transformedAddresses);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
     /** TODO: Fetch addresses based on houseNumber and zipCode
-     * - Example URL of API: http://api.postcodedata.nl/v1/postcode/?postcode=1211EP&streetnumber=60&ref=domeinnaam.nl&type=json
+     * - Example URL of API: http://api.postcodedata.nl/v1/postcode/?postcode=480111&streetnumber=60&ref=domeinnaam.nl&type=json
      * - Handle errors if they occur
      * - Handle successful response by updating the `addresses` in the state using `setAddresses`
      * - Make sure to add the houseNumber to each found address in the response using `transformAddress()` function
@@ -61,7 +110,8 @@ function App() {
   };
 
   const handlePersonSubmit = (e) => {
-    e.preventDefault();
+    // e.preventDefault();
+    const { selectedAddress, firstName, lastName } = formFields;
 
     if (!selectedAddress || !addresses.length) {
       setError(
@@ -76,7 +126,13 @@ function App() {
 
     addAddress({ ...foundAddress, firstName, lastName });
   };
-
+  const handleSelectedAddressChange = (e) => {
+    handleChange(e);
+  };
+  const clearFormFields = () => {
+   
+    setFields({ ...formFields, zipCode: "", houseNumber: "" });
+  };
   return (
     <main>
       <Section>
@@ -88,28 +144,24 @@ function App() {
           </small>
         </h1>
         {/* TODO: Create generic <Form /> component to display form rows, legend and a submit button  */}
-        <form onSubmit={handleAddressSubmit}>
-          <fieldset>
-            <legend>🏠 Find an address</legend>
-            <div className="form-row">
-              <InputText
-                name="zipCode"
-                onChange={handleZipCodeChange}
-                placeholder="Zip Code"
-                value={zipCode}
-              />
-            </div>
-            <div className="form-row">
-              <InputText
-                name="houseNumber"
-                onChange={handleHouseNumberChange}
-                value={houseNumber}
-                placeholder="House number"
-              />
-            </div>
-            <Button type="submit">Find</Button>
-          </fieldset>
-        </form>
+        <Form
+          legend="🏠 Find an address"
+          onSubmit={handleAddressSubmit}
+          fields={[
+            {
+              name: "zipCode",
+              placeholder: "Zip Code",
+              value: formFields.zipCode,
+            },
+            {
+              name: "houseNumber",
+              placeholder: "House number",
+              value: formFields.houseNumber,
+            },
+          ]}
+          onChange={handleChange}
+          submitButtonText={loading ? "Finding..." : "Find"}
+        />
         {addresses.length > 0 &&
           addresses.map((address) => {
             return (
@@ -124,35 +176,35 @@ function App() {
             );
           })}
         {/* TODO: Create generic <Form /> component to display form rows, legend and a submit button  */}
-        {selectedAddress && (
-          <form onSubmit={handlePersonSubmit}>
-            <fieldset>
-              <legend>✏️ Add personal info to address</legend>
-              <div className="form-row">
-                <InputText
-                  name="firstName"
-                  placeholder="First name"
-                  onChange={handleFirstNameChange}
-                  value={firstName}
-                />
-              </div>
-              <div className="form-row">
-                <InputText
-                  name="lastName"
-                  placeholder="Last name"
-                  onChange={handleLastNameChange}
-                  value={lastName}
-                />
-              </div>
-              <Button type="submit">Add to addressbook</Button>
-            </fieldset>
-          </form>
-        )}
-
+        <section>
+          {formFields.selectedAddress && (
+            <Form
+              legend="✏️ Add personal info to address"
+              onSubmit={handlePersonSubmit}
+              fields={[
+                {
+                  name: "firstName",
+                  placeholder: "First name",
+                  value: formFields.firstName,
+                },
+                {
+                  name: "lastName",
+                  placeholder: "Last name",
+                  value: formFields.lastName,
+                },
+              ]}
+              onChange={handleChange}
+              submitButtonText="Add to addressbook"
+            />
+          )}
+        </section>
         {/* TODO: Create an <ErrorMessage /> component for displaying an error message */}
-        {error && <div className="error">{error}</div>}
+        {error && <ErrorMessage errorMessage={error} />}
 
         {/* TODO: Add a button to clear all form fields. Button must look different from the default primary button, see design. */}
+        <Button variant="clear" onClick={clearFormFields}>
+          Clear Form Fields
+        </Button>
       </Section>
 
       <Section variant="dark">
