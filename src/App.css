@@ -18,6 +18,7 @@
   --color-text-light: #72787d;
   --width-input: 20rem;
   --width-content: 30rem;
+  --font-primary: Roboto;
 }
 
 * {
@@ -62,4 +63,14 @@ legend {
 
 .form-row {
   margin-bottom: 0.5em;
+}
+
+@media (max-width: 768px) {
+  main {
+    padding: 1rem;
+  }
+
+  :root {
+    --width-input: 100%;
+  }
 }
